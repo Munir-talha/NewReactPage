@@ -1,16 +1,17 @@
 import React from 'react';
-import { Button, Checkbox, Flex, Form, Input } from 'antd';
+import { Button, Checkbox, Form, Input } from 'antd';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 
 function Login() {
     const navigate = useNavigate();
+    
     const onFinish = (values) => {
-        console.log('Success:', values);
         axios.post('http://localhost:5000/login', values)
             .then((response) => {
                 if (response.data.success) {
-                    console.log('Login successful:', response.data);
+                    // Store the JWT token in localStorage
+                    localStorage.setItem('authToken', response.data.token);
                     navigate('/home');
                 } else {
                     alert(response.data.message || 'Invalid username or password');
@@ -21,25 +22,19 @@ function Login() {
                 alert('An error occurred during login.');
             });
     };
+    
     const onFinishFailed = (errorInfo) => {
         alert('Failed:', errorInfo);
     };
+    
     return (
-        <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }} >
+        <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
             <Form
                 name="basic"
-                labelCol={{
-                    span: 8,
-                }}
-                wrapperCol={{
-                    span: 16,
-                }}
-                style={{
-                    maxWidth: 600,
-                }}
-                initialValues={{
-                    remember: true,
-                }}
+                labelCol={{ span: 8 }}
+                wrapperCol={{ span: 16 }}
+                style={{ maxWidth: 600 }}
+                initialValues={{ remember: true }}
                 onFinish={onFinish}
                 onFinishFailed={onFinishFailed}
                 autoComplete="off"
@@ -47,12 +42,7 @@ function Login() {
                 <Form.Item
                     label="Username"
                     name="username"
-                    rules={[
-                        {
-                            required: true,
-                            message: 'Please input your username!',
-                        },
-                    ]}
+                    rules={[{ required: true, message: 'Please input your username!' }]}
                 >
                     <Input />
                 </Form.Item>
@@ -60,12 +50,7 @@ function Login() {
                 <Form.Item
                     label="Password"
                     name="password"
-                    rules={[
-                        {
-                            required: true,
-                            message: 'Please input your password!',
-                        },
-                    ]}
+                    rules={[{ required: true, message: 'Please input your password!' }]}
                 >
                     <Input.Password />
                 </Form.Item>
@@ -73,27 +58,19 @@ function Login() {
                 <Form.Item
                     name="remember"
                     valuePropName="checked"
-                    wrapperCol={{
-                        offset: 8,
-                        span: 16,
-                    }}
+                    wrapperCol={{ offset: 8, span: 16 }}
                 >
                     <Checkbox>Remember me</Checkbox>
                 </Form.Item>
 
-                <Form.Item
-                    wrapperCol={{
-                        offset: 8,
-                        span: 16,
-                    }}
-                >
+                <Form.Item wrapperCol={{ offset: 8, span: 16 }}>
                     <Button type="primary" htmlType="submit">
                         Submit
                     </Button>
                 </Form.Item>
             </Form>
         </div>
-    )
+    );
 }
 
-export default Login
+export default Login;
