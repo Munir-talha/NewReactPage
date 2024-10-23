@@ -8,23 +8,24 @@ function Home() {
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [currentUser, setCurrentUser] = useState(null);
+  const [form] = Form.useForm();  // Form instance
 
   useEffect(() => {
     fetch('http://localhost:5000/getAll')
       .then((response) => response.json())
       .then((data) => {
-        console.log("API Data: ", data);  // Inspect the response from API
+        console.log("API Data: ", data);  
         setUsers(data);
-        setLoading(false);  // Data has been fetched, stop loading
+        setLoading(false); 
       })
       .catch((error) => {
         console.log(error);
-        setLoading(false);  // Stop loading even if there's an error
+        setLoading(false);  
       });
   }, []);
 
   const tableData = users.data?.length > 0 ? users.data?.map((user) => ({
-    key: user.id || 'N/A',  // Add a fallback in case 'id' is missing
+    key: user.id || 'N/A',  
     fname: user.fname || 'N/A',
     lname: user.lname || 'N/A',
     email: user.email || 'N/A',
@@ -32,9 +33,42 @@ function Home() {
   })) : [];
 
   const onEdit = (record) => {
+    setIsEditing(true);
     setCurrentUser(record);
-    showModal(record);
+    form.setFieldsValue(record);  // Set form values for editing
+    showModal();
   };
+
+  const data = [
+    {
+      key: '1',
+      fname: 'John',
+      lname: 'Doe',
+      email: '',
+      phone: '1234567890',
+    },
+    {
+      key: '2',
+      fname: 'Jane',
+      lname: 'Doe',
+      email: '',
+      phone: '1234567890',
+    },
+    {
+      key: '3',
+      fname: 'John',
+      lname: 'Smith',
+      email: '',
+      phone: '1234567890',
+    },
+    {
+      key: '4',
+      fname: 'Jane',
+      lname: 'Smith',
+      email: '',
+      phone: '1234567890',
+    },
+  ];
 
   const columnsData = [
     {
@@ -61,41 +95,48 @@ function Home() {
     },
   ];
 
-  const showModal = (user = null) => {
-    setCurrentUser(user);
-    setIsEditing(!!user); // Check if we are editing an existing user
+  const showModal = () => {
     setIsModalVisible(true);
+  };
+
+  const handleAddUser = () => {
+    setIsEditing(false);
+    setCurrentUser(null);
+    form.resetFields();  // Clear form fields for new user
+    showModal();
   };
 
   const handleOk = (values) => {
     if (isEditing) {
       console.log("Editing User:", values);
-      setUsers((prevUsers) =>
-        prevUsers.map((user) => (user?.data.id === currentUser.id ? { ...user, ...values } : user))
-      );
+      // setUsers((prevUsers) =>
+      //   prevUsers.map((user) => (user?.data.id === currentUser.id ? { ...user, ...values } : user))
+      // );
     } else {
       console.log("Adding User:", values);
-      setUsers((prevUsers) => [
-        ...prevUsers,
-        { id: Date.now(), ...values },
-      ]);
+      // setUsers((prevUsers) => [
+      //   ...prevUsers,
+      //   { id: Date.now(), ...values },
+      // ]);
     }
     setIsModalVisible(false);
     setCurrentUser(null);
+    form.resetFields();  // Ensure fields are reset after submission
   };
 
   const handleCancel = () => {
     setIsModalVisible(false);
     setCurrentUser(null);
+    form.resetFields();  
   };
 
   return (
     <div>
       <h1>User Data</h1>
-      <Button type="primary" onClick={() => showModal()}>Add User</Button>
-      <Usertable columnsData={columnsData} tableData={tableData} loading={loading} onEdit={onEdit} />
+      <Button type="primary" onClick={handleAddUser}>Add User</Button>
+      <Usertable columnsData={columnsData} tableData={data} loading={loading} onEdit={onEdit} />
 
-      {/* Modal for Adding/Editing User */}
+      
       <Modal
         title={isEditing ? 'Edit User' : 'Add User'}
         visible={isModalVisible}
@@ -103,7 +144,8 @@ function Home() {
         footer={null}
       >
         <Form
-          initialValues={currentUser || { fname: '', lname: '', email: '', phone: '' }}
+          form={form}  // Bind the form instance
+          initialValues={{ fname: '', lname: '', email: '', phone: '' }}  // Always reset form fields for adding
           onFinish={handleOk}
           layout="vertical"
         >
