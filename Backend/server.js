@@ -2,15 +2,15 @@ const express = require('express');
 const app = express();
 const cors = require('cors');
 const userRoutes = require('./routes/UserRoutes');
-// const sql = require('mysql');
+const sql = require('mysql');
 
-// const db = sql.createConnection({
-//     host: 'localhost',
-//     user: 'root',
-//     password: '',
-//     database: 'newdatabase',
+const db = sql.createConnection({
+    host: 'localhost',
+    user: 'root',
+    password: '',
+    database: 'newdatabase',
 
-// });
+});
 app.use(cors());
 app.use(express.urlencoded({ extended: true }));
 app.use((req, res, next) => {
@@ -19,7 +19,7 @@ app.use((req, res, next) => {
 });
 app.use(express.json());
 
-app.use('/api', userRoutes);
+app.use('/', userRoutes);
 
 
 app.listen(5000, () => {

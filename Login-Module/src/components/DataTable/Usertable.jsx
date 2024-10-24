@@ -124,8 +124,10 @@ function Usertable({ columnsData, tableData, loading, onEdit }) {
     columns.push({
         title: 'Action',
         key: 'action',
-        render: (_, record) => (
+        render: (_, record) => (<>
             <Button onClick={() => onEdit(record)}>Edit</Button>
+            <Button color="danger" variant="solid" style={{ 'marginLeft': '10px' }} onClick={() => onDelete(record.key)}>Delete</Button>
+        </>
         ),
     });
 

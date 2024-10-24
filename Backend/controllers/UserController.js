@@ -1,4 +1,4 @@
-const db = require('../db');  
+const db = require('../db');
 const jwt = require('jsonwebtoken');
 const secretKey = 'mySuperSecretKey123!';
 
@@ -29,3 +29,25 @@ exports.getAllUsers = (req, res) => {
         }
     });
 };
+
+exports.updateUser = (req, res) => {
+    const { id, fname, lname, email, phone } = req.body;
+    db.query('UPDATE users SET fname = ?, lname = ? , email = ?, phone = ? WHERE id = ?', [fname, lname, email, phone, id], (err, result) => {
+        if (err) {
+            return res.send({ err });
+        }
+        return res.send({ success: true, message: 'User updated successfully' });
+    });
+
+}
+
+exports.AddUser = (req, res) => {
+    const { fname, lname, email, phone } = req.body;
+    console.log(req.body)
+    db.query('INSERT INTO users (fname, lname, email, phone) VALUES (?,?,?,?)', [fname, lname, email, phone], (err, result) => {
+        if (err) {
+            return res.send({ err });
+        }
+        return res.send({ success: true, message: 'User added successfully' });
+    });
+}

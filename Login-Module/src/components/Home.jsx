@@ -1,6 +1,8 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
+import { nanoid } from 'nanoid'
 import Usertable from './DataTable/Usertable';
 import { Button, Modal, Form, Input } from 'antd';
+import axios from 'axios';
 
 function Home() {
   const [users, setUsers] = useState([]);
@@ -8,23 +10,24 @@ function Home() {
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [currentUser, setCurrentUser] = useState(null);
-  const [form] = Form.useForm();  // Form instance
+  const [form] = Form.useForm();
+  const [userID, setUserID] = useState(null);
 
   useEffect(() => {
     fetch('http://localhost:5000/getAll')
       .then((response) => response.json())
       .then((data) => {
         setUsers(data);
-        setLoading(false); 
+        setLoading(false);
       })
       .catch((error) => {
         console.log(error);
-        setLoading(false);  
+        setLoading(false);
       });
   }, []);
 
   const tableData = users.data?.length > 0 ? users.data?.map((user) => ({
-    key: user.id || 'N/A',  
+    key: user.id || 'N/A',
     fname: user.fname || 'N/A',
     lname: user.lname || 'N/A',
     email: user.email || 'N/A',
@@ -32,6 +35,7 @@ function Home() {
   })) : [];
 
   const onEdit = (record) => {
+    setUserID(record.key);
     setIsEditing(true);
     setCurrentUser(record);
     form.setFieldsValue(record);  // Set form values for editing
@@ -98,6 +102,10 @@ function Home() {
     setIsModalVisible(true);
   };
 
+  const onDelete = (record) => {
+    console.log(record)
+  }
+
   const handleAddUser = () => {
     setIsEditing(false);
     setCurrentUser(null);
@@ -107,35 +115,31 @@ function Home() {
 
   const handleOk = (values) => {
     if (isEditing) {
-      console.log("Editing User:", values);
-      // setUsers((prevUsers) =>
-      //   prevUsers.map((user) => (user?.data.id === currentUser.id ? { ...user, ...values } : user))
-      // );
+      values = { ...values, id: userID }
+      console.log("Values: ", values)
+      axios.post(`http://localhost:5000/update`, values)
     } else {
-      console.log("Adding User:", values);
-      // setUsers((prevUsers) => [
-      //   ...prevUsers,
-      //   { id: Date.now(), ...values },
-      // ]);
+      values = { ...values, id: nanoid() }
+      axios.post(`http://localhost:5000/AddUser`, values)
     }
     setIsModalVisible(false);
     setCurrentUser(null);
-    form.resetFields();  // Ensure fields are reset after submission
+    form.resetFields();
   };
 
   const handleCancel = () => {
     setIsModalVisible(false);
     setCurrentUser(null);
-    form.resetFields();  
+    form.resetFields();
   };
 
   return (
     <div>
       <h1>User Data</h1>
       <Button type="primary" onClick={handleAddUser}>Add User</Button>
-      <Usertable columnsData={columnsData} tableData={data} loading={loading} onEdit={onEdit} />
+      <Usertable columnsData={columnsData} tableData={tableData} loading={loading} onEdit={onEdit} onDelete={onDelete} />
 
-      
+
       <Modal
         title={isEditing ? 'Edit User' : 'Add User'}
         visible={isModalVisible}
