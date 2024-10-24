@@ -2,6 +2,7 @@ import React from 'react';
 import { Button, Checkbox, Form, Input } from 'antd';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
+import Swal from 'sweetalert2'; // Import SweetAlert2
 
 function Login() {
     const navigate = useNavigate();
@@ -12,19 +13,47 @@ function Login() {
                 if (response.data.success) {
                     // Store the JWT token in localStorage
                     localStorage.setItem('authToken', response.data.token);
-                    navigate('/home');
+
+                    // Show success alert using SweetAlert
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Login Successful',
+                        text: 'You have successfully logged in!',
+                        timer: 2000,
+                        showConfirmButton: false,
+                    });
+
+                    // Navigate to home page after success
+                    setTimeout(() => {
+                        navigate('/home');
+                    }, 2000); // Redirect after 2 seconds
                 } else {
-                    alert(response.data.message || 'Invalid username or password');
+                    // Show error alert for invalid credentials
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Login Failed',
+                        text: response.data.message || 'Invalid username or password',
+                    });
                 }
             })
             .catch((error) => {
                 console.log(error);
-                alert('An error occurred during login.');
+                // Show error alert for server or network issues
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: 'An error occurred during login.',
+                });
             });
     };
     
     const onFinishFailed = (errorInfo) => {
-        alert('Failed:', errorInfo);
+        // Show error alert if form validation fails
+        Swal.fire({
+            icon: 'error',
+            title: 'Validation Failed',
+            text: 'Please check the form and fill in all required fields.',
+        });
     };
     
     return (

@@ -1,8 +1,9 @@
-import React, { useEffect, useRef, useState } from 'react';
-import { nanoid } from 'nanoid'
+import React, { useEffect, useState } from 'react';
+import { nanoid } from 'nanoid';
 import Usertable from './DataTable/Usertable';
 import { Button, Modal, Form, Input } from 'antd';
 import axios from 'axios';
+import Swal from 'sweetalert2';  // Import SweetAlert
 
 function Home() {
   const [users, setUsers] = useState([]);
@@ -13,65 +14,137 @@ function Home() {
   const [form] = Form.useForm();
   const [userID, setUserID] = useState(null);
 
+  const fetchUsers = () => {
+    setLoading(true);
+    
+    // Retrieve the token from localStorage
+    const token = localStorage.getItem('authToken');
+    
+    fetch('http://localhost:5000/getAll', {
+      method: 'GET',
+      headers: {
+          'Content-Type': 'application/json',
+          'Authorization': token,
+      },
+  })
+  .then((response) => {
+      if (response.status === 401 || response.status === 403) {
+          // Handle unauthorized access
+          Swal.fire({
+              icon: 'warning',
+              title: 'Session Expired',
+              text: 'Please log in again.',
+          });
+          // redirect to login page
+          localStorage.removeItem('authToken');
+          window.location.href = '/'; 
+          return;
+      }
+      return response.json();
+  })
+  .then((data) => {
+      setUsers(data);
+      setLoading(false);
+  })
+  .catch((error) => {
+      console.log(error);
+      setLoading(false);
+  });
+};
+
   useEffect(() => {
-    fetch('http://localhost:5000/getAll')
-      .then((response) => response.json())
-      .then((data) => {
-        setUsers(data);
-        setLoading(false);
-      })
-      .catch((error) => {
-        console.log(error);
-        setLoading(false);
-      });
+    fetchUsers();
   }, []);
 
-  const tableData = users.data?.length > 0 ? users.data?.map((user) => ({
-    key: user.id || 'N/A',
-    fname: user.fname || 'N/A',
-    lname: user.lname || 'N/A',
-    email: user.email || 'N/A',
-    phone: user.phone || 'N/A',
-  })) : [];
+  const tableData = users.data?.length > 0
+    ? users.data?.map((user) => ({
+        key: user.id || 'N/A',
+        fname: user.fname || 'N/A',
+        lname: user.lname || 'N/A',
+        email: user.email || 'N/A',
+        phone: user.phone || 'N/A',
+      }))
+    : [];
 
   const onEdit = (record) => {
     setUserID(record.key);
     setIsEditing(true);
     setCurrentUser(record);
-    form.setFieldsValue(record);  // Set form values for editing
+    form.setFieldsValue(record);
     showModal();
   };
 
-  const data = [
-    {
-      key: '1',
-      fname: 'John',
-      lname: 'Doe',
-      email: '',
-      phone: '1234567890',
-    },
-    {
-      key: '2',
-      fname: 'Jane',
-      lname: 'Doe',
-      email: '',
-      phone: '1234567890',
-    },
-    {
-      key: '3',
-      fname: 'John',
-      lname: 'Smith',
-      email: '',
-      phone: '1234567890',
-    },
-    {
-      key: '4',
-      fname: 'Jane',
-      lname: 'Smith',
-      email: '',
-      phone: '1234567890',
-    },
-  ];
+  const handleAddUser = () => {
+    setIsEditing(false);
+    setCurrentUser(null);
+    form.resetFields();
+    showModal();
+  };
+
+  const handleOk = (values) => {
+    if (isEditing) {
+      values = { ...values, id: userID };
+      axios.post(`http://localhost:5000/update`, values, {
+        headers: {
+            'Authorization': localStorage.getItem('authToken'),  // Add token in Authorization header
+        }
+    })
+    .then(() => {
+        fetchUsers();
+        // Show success alert on update
+        Swal.fire({
+            icon: 'success',
+            title: 'User Updated',
+            text: 'The user has been updated successfully!',
+            timer: 2000, // Auto close after 2 seconds
+            showConfirmButton: false,
+        });
+    })
+    .catch((error) => {
+        Swal.fire({
+            icon: 'error',
+            title: 'Update Failed',
+            text: 'An error occurred while updating the user.',
+        });
+    });
+    } else {
+      values = { ...values, id: nanoid() };
+      axios.post(`http://localhost:5000/AddUser`, values, {
+        headers: {
+            'Authorization': localStorage.getItem('authToken'),  // Add token in Authorization header
+        }
+    })
+    .then(() => {
+        fetchUsers();
+        // Show success alert on add
+        Swal.fire({
+            icon: 'success',
+            title: 'User Added',
+            text: 'The user has been added successfully!',
+            timer: 2000,
+            showConfirmButton: false,
+        });
+    })
+    .catch((error) => {
+        Swal.fire({
+            icon: 'error',
+            title: 'Add Failed',
+            text: 'An error occurred while adding the user.',
+        });
+    });
+    }
+    setIsModalVisible(false);
+    form.resetFields();
+  };
+
+  const handleCancel = () => {
+    setIsModalVisible(false);
+    form.resetFields();
+  };
+
+  const showModal = () => {
+    setIsModalVisible(true);
+  };
 
   const columnsData = [
     {
@@ -98,47 +171,11 @@ function Home() {
     },
   ];
 
-  const showModal = () => {
-    setIsModalVisible(true);
-  };
-
-  const onDelete = (record) => {
-    console.log(record)
-  }
-
-  const handleAddUser = () => {
-    setIsEditing(false);
-    setCurrentUser(null);
-    form.resetFields();  // Clear form fields for new user
-    showModal();
-  };
-
-  const handleOk = (values) => {
-    if (isEditing) {
-      values = { ...values, id: userID }
-      console.log("Values: ", values)
-      axios.post(`http://localhost:5000/update`, values)
-    } else {
-      values = { ...values, id: nanoid() }
-      axios.post(`http://localhost:5000/AddUser`, values)
-    }
-    setIsModalVisible(false);
-    setCurrentUser(null);
-    form.resetFields();
-  };
-
-  const handleCancel = () => {
-    setIsModalVisible(false);
-    setCurrentUser(null);
-    form.resetFields();
-  };
-
   return (
     <div>
       <h1>User Data</h1>
       <Button type="primary" onClick={handleAddUser}>Add User</Button>
-      <Usertable columnsData={columnsData} tableData={tableData} loading={loading} onEdit={onEdit} onDelete={onDelete} />
-
+      <Usertable columnsData={columnsData} tableData={tableData} loading={loading} onEdit={onEdit} />
 
       <Modal
         title={isEditing ? 'Edit User' : 'Add User'}
@@ -147,8 +184,8 @@ function Home() {
         footer={null}
       >
         <Form
-          form={form}  // Bind the form instance
-          initialValues={{ fname: '', lname: '', email: '', phone: '' }}  // Always reset form fields for adding
+          form={form}
+          initialValues={{ fname: '', lname: '', email: '', phone: '' }}
           onFinish={handleOk}
           layout="vertical"
         >

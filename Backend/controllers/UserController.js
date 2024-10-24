@@ -9,7 +9,7 @@ exports.login = (req, res) => {
             return res.send({ err });
         }
         if (result.length > 0) {
-            const token = jwt.sign({ username: result[0].username }, secretKey, { expiresIn: '1h' });
+            const token = jwt.sign({ username: result[0].username }, secretKey, { expiresIn: '1m' });
             return res.send({ success: true, token });
         } else {
             return res.send({ success: false, message: 'Invalid username or password' });
