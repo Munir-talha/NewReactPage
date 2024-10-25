@@ -3,7 +3,7 @@ import { nanoid } from 'nanoid';
 import Usertable from './DataTable/Usertable';
 import { Button, Modal, Form, Input } from 'antd';
 import axios from 'axios';
-import Swal from 'sweetalert2';  // Import SweetAlert
+import Swal from 'sweetalert2';
 
 function Home() {
   const [users, setUsers] = useState([]);
@@ -16,54 +16,55 @@ function Home() {
 
   const fetchUsers = () => {
     setLoading(true);
-    
+
     // Retrieve the token from localStorage
     const token = localStorage.getItem('authToken');
-    
+
     fetch('http://localhost:5000/getAll', {
       method: 'GET',
       headers: {
-          'Content-Type': 'application/json',
-          'Authorization': token,
+        'Content-Type': 'application/json',
+        'Authorization': token,
       },
-  })
-  .then((response) => {
-      if (response.status === 401 || response.status === 403) {
+    })
+      .then((response) => {
+        if (response.status === 401 || response.status === 403) {
           // Handle unauthorized access
           Swal.fire({
-              icon: 'warning',
-              title: 'Session Expired',
-              text: 'Please log in again.',
+            icon: 'warning',
+            title: 'Session Expired',
+            text: 'Please log in again.',
           });
           // redirect to login page
           localStorage.removeItem('authToken');
-          window.location.href = '/'; 
+          window.location.href = '/';
           return;
-      }
-      return response.json();
-  })
-  .then((data) => {
-      setUsers(data);
-      setLoading(false);
-  })
-  .catch((error) => {
-      console.log(error);
-      setLoading(false);
-  });
-};
+        }
+        return response.json();
+      })
+      .then((data) => {
+        setUsers(data);
+        setLoading(false);
+      })
+      .catch((error) => {
+        console.log(error);
+        setLoading(false);
+      });
+  };
 
   useEffect(() => {
     fetchUsers();
+    console.log("-> ", users)
   }, []);
 
   const tableData = users.data?.length > 0
     ? users.data?.map((user) => ({
-        key: user.id || 'N/A',
-        fname: user.fname || 'N/A',
-        lname: user.lname || 'N/A',
-        email: user.email || 'N/A',
-        phone: user.phone || 'N/A',
-      }))
+      key: user.id || 'N/A',
+      fname: user.fname || 'N/A',
+      lname: user.lname || 'N/A',
+      email: user.email || 'N/A',
+      phone: user.phone || 'N/A',
+    }))
     : [];
 
   const onEdit = (record) => {
@@ -86,52 +87,52 @@ function Home() {
       values = { ...values, id: userID };
       axios.post(`http://localhost:5000/update`, values, {
         headers: {
-            'Authorization': localStorage.getItem('authToken'),  // Add token in Authorization header
+          'Authorization': localStorage.getItem('authToken'),
         }
-    })
-    .then(() => {
-        fetchUsers();
-        // Show success alert on update
-        Swal.fire({
+      })
+        .then(() => {
+          fetchUsers();
+          // Show success alert on update
+          Swal.fire({
             icon: 'success',
             title: 'User Updated',
             text: 'The user has been updated successfully!',
-            timer: 2000, // Auto close after 2 seconds
+            timer: 2000,
             showConfirmButton: false,
-        });
-    })
-    .catch((error) => {
-        Swal.fire({
+          });
+        })
+        .catch((error) => {
+          Swal.fire({
             icon: 'error',
             title: 'Update Failed',
             text: 'An error occurred while updating the user.',
+          });
         });
-    });
     } else {
       values = { ...values, id: nanoid() };
       axios.post(`http://localhost:5000/AddUser`, values, {
         headers: {
-            'Authorization': localStorage.getItem('authToken'),  // Add token in Authorization header
+          'Authorization': localStorage.getItem('authToken'),  // Add token in Authorization header
         }
-    })
-    .then(() => {
-        fetchUsers();
-        // Show success alert on add
-        Swal.fire({
+      })
+        .then(() => {
+          fetchUsers();
+          // Show success alert on add
+          Swal.fire({
             icon: 'success',
             title: 'User Added',
             text: 'The user has been added successfully!',
             timer: 2000,
             showConfirmButton: false,
-        });
-    })
-    .catch((error) => {
-        Swal.fire({
+          });
+        })
+        .catch((error) => {
+          Swal.fire({
             icon: 'error',
             title: 'Add Failed',
             text: 'An error occurred while adding the user.',
+          });
         });
-    });
     }
     setIsModalVisible(false);
     form.resetFields();
@@ -142,6 +143,32 @@ function Home() {
     form.resetFields();
   };
 
+  const onDelete = (record) => {
+    axios.post(`http://localhost:5000/deleteUser`, { id: record }, {
+      headers: {
+        'Authorization': localStorage.getItem('authToken'),
+      }
+    })
+      .then(() => {
+        fetchUsers();
+        // Show success alert on delete
+        Swal.fire({
+          icon: 'success',
+          title: 'User Deleted',
+          text: 'The user has been deleted successfully!',
+          timer: 2000,
+          showConfirmButton: false,
+        });
+      })
+      .catch((error) => {
+        Swal.fire({
+          icon: 'error',
+          title: 'Delete Failed',
+          text: 'An error occurred while deleting the user.',
+        });
+      });
+
+  }
   const showModal = () => {
     setIsModalVisible(true);
   };
@@ -175,7 +202,7 @@ function Home() {
     <div>
       <h1>User Data</h1>
       <Button type="primary" onClick={handleAddUser}>Add User</Button>
-      <Usertable columnsData={columnsData} tableData={tableData} loading={loading} onEdit={onEdit} />
+      <Usertable columnsData={columnsData} tableData={tableData} loading={loading} onEdit={onEdit} onDelete={onDelete} />
 
       <Modal
         title={isEditing ? 'Edit User' : 'Add User'}

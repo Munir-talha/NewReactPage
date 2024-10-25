@@ -4,7 +4,7 @@ import { SearchOutlined } from '@ant-design/icons';
 import { Button, Input, Space, Table } from 'antd';
 import Highlighter from 'react-highlight-words';
 
-function Usertable({ columnsData, tableData, loading, onEdit }) {
+function Usertable({ columnsData, tableData, loading, onEdit, onDelete }) {
     const [searchText, setSearchText] = useState('');
     const [searchedColumn, setSearchedColumn] = useState('');
     const searchInput = useRef(null);

@@ -9,7 +9,7 @@ exports.login = (req, res) => {
             return res.send({ err });
         }
         if (result.length > 0) {
-            const token = jwt.sign({ username: result[0].username }, secretKey, { expiresIn: '1m' });
+            const token = jwt.sign({ username: result[0].username }, secretKey, { expiresIn: '1h' });
             return res.send({ success: true, token });
         } else {
             return res.send({ success: false, message: 'Invalid username or password' });
@@ -49,5 +49,15 @@ exports.AddUser = (req, res) => {
             return res.send({ err });
         }
         return res.send({ success: true, message: 'User added successfully' });
+    });
+}
+
+exports.DeleteUser = (req, res) => {
+    const { id } = req.body;
+    db.query('DELETE FROM users WHERE id = ?', [id], (err, result) => {
+        if (err) {
+            return res.send({ err });
+        }
+        return res.send({ success: true, message: 'User deleted successfully' });
     });
 }

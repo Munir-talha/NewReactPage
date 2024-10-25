@@ -6,11 +6,12 @@ import Swal from 'sweetalert2'; // Import SweetAlert2
 
 function Login() {
     const navigate = useNavigate();
-    
+
     const onFinish = (values) => {
         axios.post('http://localhost:5000/login', values)
             .then((response) => {
                 if (response.data.success) {
+                    console.log(response.data.token)
                     // Store the JWT token in localStorage
                     localStorage.setItem('authToken', response.data.token);
 
@@ -46,7 +47,7 @@ function Login() {
                 });
             });
     };
-    
+
     const onFinishFailed = (errorInfo) => {
         // Show error alert if form validation fails
         Swal.fire({
@@ -55,7 +56,7 @@ function Login() {
             text: 'Please check the form and fill in all required fields.',
         });
     };
-    
+
     return (
         <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
             <Form
